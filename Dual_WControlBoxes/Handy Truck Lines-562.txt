@@ -1,0 +1,543 @@
+100%s23640%i%e           Access Setup Modes, Allowing Changes
+
+Indicator model downloaded from: 0560
+1,1K%d                   Set LCD to small font, to speed up data transfer
+P1,1c,F4%C               Clear first four lines of LCD
+
+50001%s%c%e              Deallocate Macro Trace Buffer
+
+179%s0%e                 P179.00  Count Disbl
+
+
+680%s5%e%e               P680.05  #Vars =   5
+
+
+590%s0%e%e               P590.00  DSD   Disbl
+
+199%s1%e                 P199.01  Port  2100916
+205%s1%e                 P205.01  Recv  Std
+
+108%s1%e                 P108.01  Scale     1
+109%s2%e                 P109.02  Scl 1 Enbld
+110%s5000.000000%e       P110.    F.S. 5000.
+111%s15%e                P111.15  1div1 1.
+112%s30%e                P112.    ZTAp 3.0 d
+113%s15%e                P113.    ZTDl 1.5 s
+114%s30%e                P114.    Motn 3.0 d
+115%s15%e                P115.    MtDl 1.5 s
+116%s10%e                P116.10  Fltr1 8.0sA
+117%s0%e                 P117.    Rate 0.05s
+118%s7%e                 P118.07  Zrng1   2.%%
+119%s0%e                 P119.00  Lnrz1 Disbl
+122%s3%e                 P122.03  RTZ 1  0.1%%
+126%s0.000000%e          P126.    L.R. 0.000
+127%s9%e                 P127.09  LDiv1 .01
+128%s0.000000%e          P128.    M.R. 0.000
+129%s9%e                 P129.09  MDiv1 .01
+130%s0%e                 P130.00  Rnge1 Gross
+131%s0%e                 P131.00  Unit1 lb
+132%s0%e                 P132.00  Unit1 lb
+133%s9%e                 P133.09  Unit1 NONE
+134%s9%e                 P134.09  Unit1 NONE
+135%s0.000000%e          P135.    RMP. Off
+
+108%s2%e                 P108.02  Scale     2
+109%s0%e                 P109.00  Scl 2 Disbl
+
+108%s3%e                 P108.03  Scale     3
+109%s0%e                 P109.00  Scl 3 Disbl
+
+108%s4%e                 P108.04  Scale     4
+109%s0%e                 P109.00  Scl 4 Disbl
+
+
+142%s1%e                 P142.01  DspCZ Enbld
+
+143%sO%e                 P143.    OLNam O
+144%sM%e                 P144.    MtNam M
+145%sS%e                 P145.    StNam S
+146%sO%e                 P146.    ULNam O
+147%sE%e                 P147.    ErNam E
+
+150%s0%e                 P150.00  UNITS= lb
+151%s????1%e             P151.    Unam1= ????1
+152%s1.000000%e          P152.    Ucon1= 1.000
+153%s????2%e             P153.    Unam2= ????2
+154%s1.000000%e          P154.    Ucon2= 1.000
+
+162%s0%e                 P162.00  TrNEG Disbl
+163%s1%e                 P163.01  TrRND Enbld
+
+164%s1%e                 P164.01  NZtrk Enbld
+
+170%s1%e                 P170.01  AnOut     1
+171%s0%e                 P171.00  AOut1 Disbl
+
+170%s2%e                 P170.02  AnOut     2
+171%s0%e                 P171.00  AOut2 Disbl
+
+170%s3%e                 P170.03  AnOut     3
+171%s0%e                 P171.00  AOut3 Disbl
+
+170%s4%e                 P170.04  AnOut     4
+171%s0%e                 P171.00  AOut4 Disbl
+
+
+179%s0%e                 P179.00  Count Disbl
+
+
+199%s1%e                 P199.01  Port  2100916
+200%s2%e                 P200.02  Baud  9600
+201%s1%e                 P201.01  Data  8bits
+202%s0%e                 P202.00  Prty  none
+203%s0%e                 P203.00  Stop  1bit
+204%s2%e                 P204.02  Flow  Xon
+205%s1%e                 P205.01  Recv  Std
+206%s0%e                 P206.00  Full  delay
+207%s128%e               P207.    TxBf  2100916
+208%s256%e               P208.    RxBf  2100916
+210%s0%e                 P210.00  MbMd ASCII
+217%s0%e                 P217.00  NoNUL Disbl
+218%s.010%e              P218.    RxTrm  <LF>
+219%s%c999%e             P219.00  RxIn# None!  Clear all existing setups
+
+
+199%s2%e                 P199.02  Port  2100916
+200%s2%e                 P200.02  Baud  9600
+201%s1%e                 P201.01  Data  8bits
+202%s0%e                 P202.00  Prty  none
+203%s0%e                 P203.00  Stop  1bit
+204%s2%e                 P204.02  Flow  Xon
+205%s1%e                 P205.01  Recv  Std
+206%s0%e                 P206.00  Full  delay
+207%s128%e               P207.    TxBf  2100916
+208%s256%e               P208.    RxBf  2100916
+217%s0%e                 P217.00  NoNUL Disbl
+218%s.010%e              P218.    RxTrm  <LF>
+219%s%c999%e             P219.00  RxIn# None!  Clear all existing setups
+
+
+199%s3%e                 P199.03  Port  2100916
+200%s2%e                 P200.02  Baud  9600
+201%s1%e                 P201.01  Data  8bits
+202%s0%e                 P202.00  Prty  none
+203%s0%e                 P203.00  Stop  1bit
+204%s2%e                 P204.02  Flow  Xon
+205%s1%e                 P205.01  Recv  Std
+206%s0%e                 P206.00  Full  delay
+207%s128%e               P207.    TxBf  2100916
+208%s256%e               P208.    RxBf  2100916
+217%s0%e                 P217.00  NoNUL Disbl
+218%s.010%e              P218.    RxTrm  <LF>
+219%s%c999%e             P219.00  RxIn# None!  Clear all existing setups
+
+
+
+240%s8%e                 P240.08  Width     8
+
+241%s0%e                 P241.00  SgnJu Right
+
+250%s0%e                 P250.00  RS485 Disbl
+
+
+290%s0%e                 P290.00  Echo  Off
+291%s2%e                 P291.02  Start <STX>^B=02
+292%s3%e                 P292.03  End   <ETX>^C=03
+293%s0%e                 P293.00  RmDsp Disbl
+
+300%s0.0%e               P300.00  MODE0 Gross
+301%s1.0%e               P301.01  MODE1 Net
+302%s2.0%e               P302.02  MODE2 Tare
+303%s99%e                P303.99  MODE3 None!
+304%s99%e                P304.99  MODE4 None!
+305%s99%e                P305.99  MODE5 None!
+306%s99%e                P306.99  MODE6 None!
+307%s99%e                P307.99  MODE7 None!
+308%s99%e                P308.99  MODE8 None!
+309%s99%e                P309.99  MODE9 None!
+
+400%s%c                  P400.    PIN   None!
+401%s%c                  P401.    QCAL  None!
+402%s21353%e             P402.    Lmt'd 21353
+
+410%s9990%e%e            P410.    OIML  Disbl
+411%s0%e                 P411.00  LANG  USA
+412%s0%e                 P412.00  PrSET Disbl
+
+420%s1%e                 P420.01  Dsply ON
+421%s2%e                 P421.02  WtThr 6d
+422%s6%e                 P422.06  TmOut 10min
+
+430%s13%e                P430.13  Contr    13
+440%s0%e                 P440.00  NTEP  Disbl
+
+450%s9990%c              P450.    Keypd 22Key
+
+451%s7%c                 P451.07  KyRpt VFast
+
+460%s3%e                 P460.03  Beepr Low
+
+500%s%c                  P500.42  Time  08:07
+501%s%c                  P501.15  Date  06/20
+502%s0%e                 P502.00  TDAcc Disbl
+503%s1%e                 P503.01  AM/PM  yes
+504%s0%e                 P504.00  Style U.S.A
+
+590%s0%e%e               P590.00  DSD   Disbl
+
+
+600%s%c                  P600.    Gross None!
+601%s%c                  P601.    Net   None!
+602%s%c                  P602.    Tare  None!
+603%s%c                  P603.    GrTOT None!
+604%s%c                  P604.    GrT+C None!
+605%s%c                  P605.    GrT-C None!
+606%s%c                  P606.    NtTOT None!
+607%s%c                  P607.    NtT+C None!
+608%s%c                  P608.    NtT-C None!
+609%s%c                  P609.    Accum None!
+610%s%c                  P610.    Scale# None!
+611%s%c                  P611.    Tm/Dt None!
+
+615%s%c                  P615.    AvGrs None!
+616%s%c                  P616.    AvNet None!
+618%s%c                  P618.    PkGrs None!
+619%s%c                  P619.    PkNet None!
+620%s%c                  P620.    RndGr None!
+621%s%c                  P621.    RndNt None!
+623%s%c                  P623.    Rate  None!
+624%s%c                  P624.    FreFl None!
+625%s%c                  P625.    FutGr None!
+626%s%c                  P626.    FutNt None!
+627%s%c                  P627.    FrFl2 None!
+628%s%c                  P628.    FuGr2 None!
+629%s%c                  P629.    FuNt2 None!
+640%s%c                  P640.    GrAll None!
+641%s%c                  P641.    NeAll None!
+642%s%c                  P642.    TrAll None!
+643%s%c                  P643.    GTAll None!
+644%s%c                  P644.    NTAll None!
+
+660%s2%e                 P660.02  TotSv Auto
+
+661%s0%e                 P661.00  TarSv NoSav
+
+680%s5%e%e               P680.05  #Vars =   5
+
+681%s1%e                 P681.01  Var.#     1
+682%sTargt%e             P682.    VName Targt
+684%s2%e                 P684.02  VSave Auto
+685%s0%e                 P685.00  VLock Disbl
+686%s0%e                 P686.00  VType Float
+687%s7%e                 P687.07  FStyl Scl#1
+
+681%s2%e                 P681.02  Var.#     2
+682%sCut off Target%e    P682.    VName Cut off Target
+684%s2%e                 P684.02  VSave Auto
+685%s0%e                 P685.00  VLock Disbl
+686%s0%e                 P686.00  VType Float
+687%s7%e                 P687.07  FStyl Scl#1
+
+681%s3%e                 P681.03  Var.#     3
+682%sTemp%e              P682.    VName Temp
+684%s2%e                 P684.02  VSave Auto
+685%s0%e                 P685.00  VLock Disbl
+686%s0%e                 P686.00  VType Float
+687%s7%e                 P687.07  FStyl Scl#1
+
+681%s4%e                 P681.04  Var.#     4
+682%sAccual Weight%e     P682.    VName Accual Weight
+684%s0%e                 P684.00  VSave NoSav
+685%s0%e                 P685.00  VLock Disbl
+686%s0%e                 P686.00  VType Float
+687%s7%e                 P687.07  FStyl Scl#1
+
+681%s5%e                 P681.05  Var.#     5
+682%s%c                  P682.    VName None!
+684%s0%e                 P684.00  VSave NoSav
+685%s0%e                 P685.00  VLock Disbl
+686%s0%e                 P686.00  VType Float
+687%s6%e                 P687.06  FStyl Auto
+
+
+698%s0%e%e               P698.00  FRMdB Size: None!
+
+
+800%s0%e                 P800.00  Selct Enbld
+801%s0%e                 P801.00  Zero  Enbld
+802%s0%e                 P802.00  Tare  Enbld
+803%s0%e                 P803.00  Units Enbld
+804%s0%e                 P804.00  SSlct Enbld
+805%s0%e                 P805.00  Print Enbld
+806%s13%e                P806.13  IDUse Mc 13
+807%s0%e                 P807.00  Enter Enbld
+808%s0%e                 P808.00  Clear Enbld
+809%s0%e                 P809.00  DecPt Enbld
+810%s0%e                 P810.00   '0'  Enbld
+811%s0%e                 P811.00   '1'  Enbld
+812%s0%e                 P812.00   '2'  Enbld
+813%s0%e                 P813.00   '3'  Enbld
+814%s0%e                 P814.00   '4'  Enbld
+815%s0%e                 P815.00   '5'  Enbld
+816%s0%e                 P816.00   '6'  Enbld
+817%s0%e                 P817.00   '7'  Enbld
+818%s0%e                 P818.00   '8'  Enbld
+819%s0%e                 P819.00   '9'  Enbld
+820%s0%e                 P820.00  AnyKy Enbld
+
+980%s5%e                 P980.    TxRat 0.5 s
+
+989%s%c999%e             Clear all existing setups
+989%s1%e%e               P989.01  CusTx     1
+990%s%c                  P990.    TxNam None!
+991%s1%e                 P991.01  Send: OnReq
+992%s1%e                 P992.01  Port  Comm1
+993%s1%e                 P993.01  CSMtn Dly'd
+994%s0%e                 P994.    Mot'n None!
+998%s0%e                 P998.00  Cont. Disbl
+999%s0%e                 P999.00  LmtAc  no
+4999.1%s%c%e             P1000.  Custom Transmit #  1
+%e0.0%e0%e%e               Gross  Format = 0
+.256%e                     <CR> <LF>
+%e2.0%e0%e%e               Tare   Format = 0
+.256%e                     <CR> <LF>
+%e1.0%e0%e%e               Net    Format = 0
+.256%e                     <CR> <LF>
+
+
+
+5099%s%c999%e           Clear All Setpoints
+
+5099%s1%e                P5099.1  Setpt     1
+5100%s1%e                P5100.1  SPTyp Outpt
+5101%sFill%e             P5101.   SPNam Fill
+5110%s5%e                P5110.5  Activ Never
+5111%s0.000000%e         P5111.   AcDly 0.00
+5112%s0%e                P5112.0  AcMac None!
+5130%s0%e                P5130.0  Deact Above
+5131%s0.000000%e         P5131.   DeDly 0.00
+5132%s4%e                P5132.4  DeMac     4
+5133%s0%e                P5133.0  DeMtn Ign'd
+5134%s80.2%e             P5134.   DLPar Cut off Target
+5150%s1.1%e              P5150.1  CmPar Net
+
+5099%s5%e                P5099.5  Setpt     5
+5100%s1%e                P5100.1  SPTyp Outpt
+5101%sStart up%e         P5101.   SPNam Start up
+5110%s4%e                P5110.4  Activ Alwys
+5111%s0.000000%e         P5111.   AcDly 0.00
+5112%s5%e                P5112.5  AcMac     5
+5113%s0%e                P5113.0  AcMtn Ign'd
+5130%s5%e                P5130.5  Deact Never
+5131%s0.000000%e         P5131.   DeDly 0.00
+5132%s0%e                P5132.0  DeMac None!
+
+
+
+7000%s%c%e               P6001.  Modbus Register Map Setup
+
+9980%s0%e                P9980.0  Abort None!
+
+9981%s0%e                P9981.0  Abort Menu
+
+9990%s%c999%e            Clear all existing setups
+9990%s1%e%e              P9990.1  Mac.#     1
+9991%sStart Up%e         P9991.   MName Start Up
+9992%s0%e                P9992.0  Invok  Std
+9993%s0%e                P9993.0  Menu  Disbl
+9994%s1%e                P9994.1  LmtAc  yes
+
+19999.1%s%c%e            P10001.  Macro # 1
+1J%%d%e                    001:0004 display on/off
+Pa%%C%e                    001:0008 Display text
+Filling...P5,13a,f2%%C%e   001:0029 Display text
+Stop  Filling Push - <F2>P8,10c,f1%%C%e001:0065 Display text
+1%%A%e                     001:0068 activate setpoint
+%%E%e                      001:0070 end if 
+
+
+9990%s2%e%e              P9990.2  Mac.#     2
+9991%sStop Filling%e     P9991.   MName Stop Filling
+9992%s0%e                P9992.0  Invok  Std
+9993%s0%e                P9993.0  Menu  Disbl
+9994%s1%e                P9994.1  LmtAc  yes
+
+19999.2%s%c%e            P10001.  Macro # 2
+1%%F%e                     002:0003 if  setpoint off
+Pa%%C%e                    002:0007 Display text
+%%S%e                      002:0009 sound beeper
+Not Filling!P5,5a,f2%%C%e  002:0031 Display text
+%%P%e                      002:0033 pause
+5%%^%e                     002:0036 call/go to macro
+%%B%e                      002:0038 break
+%%E%e                      002:0040 end if 
+1J%%d%e                    002:0044 display on/off
+Pa%%C%e                    002:0048 Display text
+Stopped Filling...P5,1a,f2%%C%e002:0076 Display text
+1%%D%e                     002:0079 deactivate setpoint
+%%P%e                      002:0081 pause
+%%P%e                      002:0083 pause
+5%%^%e                     002:0086 call/go to macro
+%%E%e                      002:0088 end if 
+
+
+9990%s4%e%e              P9990.4  Mac.#     4
+9991%sAuto Stop Filling%eP9991.   MName Auto Stop Filling
+9992%s0%e                P9992.0  Invok  Std
+9993%s0%e                P9993.0  Menu  Disbl
+9994%s1%e                P9994.1  LmtAc  yes
+
+19999.4%s%c%e            P10001.  Macro # 4
+1J%%d%e                    004:0004 display on/off
+Pa%%C%e                    004:0008 Display text
+M0%%,%e                    004:0012 motion delay
+80.4P=20.0P%%o%e           004:0025 Math or Compare
+80.4P>80.1P%%o%e           004:0038 Math or Compare
+80.3P=80.4P-80.1P%%o%e     004:0057 Math or Compare
+80.2P-=80.3P/2%%o%e        004:0073 Math or Compare
+%%S%e                      004:0075 sound beeper
+Stopped Filling...P5,1a,f2%%C%e004:0103 Display text
+%%P%e                      004:0105 pause
+%%P%e                      004:0107 pause
+%%P%e                      004:0109 pause
+5%%^%e                     004:0112 call/go to macro
+%%B%e                      004:0114 break
+%%E%e                      004:0116 end if 
+80.3P=80.1P-80.4P%%o%e     004:0135 Math or Compare
+80.2P+=80.3P/2%%o%e        004:0151 Math or Compare
+%%S%e                      004:0153 sound beeper
+Stopped Filling...P5,1a,f2%%C%e004:0181 Display text
+%%P%e                      004:0183 pause
+%%P%e                      004:0185 pause
+%%P%e                      004:0187 pause
+5%%^%e                     004:0190 call/go to macro
+%%E%e                      004:0192 end if 
+
+
+9990%s5%e%e              P9990.5  Mac.#     5
+9991%sStart Up%e         P9991.   MName Start Up
+9992%s0%e                P9992.0  Invok  Std
+9993%s0%e                P9993.0  Menu  Disbl
+9994%s1%e                P9994.1  LmtAc  yes
+
+19999.5%s%c%e            P10001.  Macro # 5
+1J%%d%e                    005:0004 display on/off
+Pa%%C%e                    005:0008 Display text
+Start Filling Push - <F1>P5,1c,f1%%C%e005:0043 Display text
+Stop  Filling Push - <F2>P6,1c,f1%%C%e005:0078 Display text
+Enter  Target Push - <F3>P7,1c,f1%%C%e005:0113 Display text
+%%E%e                      005:0115 end if 
+
+
+9990%s13%e%e             P9990.   Mac.#    13
+9991%sEnter Target%e     P9991.   MName Enter Target
+9992%s0%e                P9992.0  Invok  Std
+9993%s0%e                P9993.0  Menu  Disbl
+9994%s1%e                P9994.1  LmtAc  yes
+
+19999.13%s%c%e           P10001.  Macro #13
+1J%%d%e                    013:0004 display on/off
+Pa%%C%e                    013:0008 Display text
+Enter Target WeightP3,1a,f2%%C%e013:0037 Display text
+OldP6,3,f1%%C%e            013:0049 Display text
+Target:P7,1,f1%%C%e        013:0065 Display text
+80.1P%%o%e                 013:0072 Math or Compare
+P6,10,f2%%C%e              013:0082 Display text
+NewP6,23,f1%%C%e           013:0095 Display text
+Target:P7,21,f1%%C%e       013:0112 Display text
+6,30,5,4n%%K%e             013:0123 Get operator input on 4x20 display
+=80.1P%%o%e                013:0131 Math or Compare
+80.2P=80.1P%%o%e           013:0144 Math or Compare
+5%%^%e                     013:0147 call/go to macro
+%%E%e                      013:0149 end if 
+
+
+
+50000%s0%e               P50000.  LmtAc  no
+
+
+
+60000%s%c                P60000.  FrIns  8192
+60001%s%c                P60001.  FrAvl  6600
+60002%s%c                P60002.  RAMsz  128K
+60003%s%c                P60003.  RAMdy 81920
+60004%s%c                P60004.  RAMav 16392
+60005%s%c                P60005.  MTBsz 62196
+60006%s%c                P60006.  FType SHARP
+60007%s%c                P60007.  FSize 1024K
+60008%s%c                P60008.  F Avl  439K
+
+60010%s%c                P60010.  OpRAMPhys      None!
+
+
+60090%s%e                P60090.  16MHz Clock
+60091%s%e                P60091.      0 RomWS
+60092%s%e                P60092.  FastT RamWS
+
+60100%s%c                P60100.  c GSE Inc.  a divofSPX  c1995-2002
+60101%s%c                P60101.  450560-01293
+60102%s%c                P60102.  Jun192002
+60103%s%c                P60103.  BLB560b01293
+60104%s%c                P60104.  B06192002
+
+60200%s%c                P60200.  B SN110953
+60201%s%c                P60201.  AuditTrail OIML  00020
+60202%s%c                P60202.  I SN406883
+60203%s%c                P60203.  AuditTrail Cal.  00002
+60204%s%c                P60204.  AuditTrail Setup 00086
+60205%s%c                P60205.  MUST!CHECK
+
+
+
+61099%s1%e               P61099.  Scale     1
+61100%s%c                P61100.  Crrnt mv/v
+61101%s  1.000000%c      P61101.   CAL Factr   1.000000
+61102%s -1.812365%c      P61102.  ReZro Wght  -1.812365
+61103%s  0.480000%c      P61103.  ZrTrk Wght   0.480000
+61104%s0%c               P61104.  CZero    0%%
+61105%s   -214555%c      P61105.  Fine Zero     -214555
+61106%s1%c               P61106.  CGain    50
+61107%s  1.000000%c      P61107.  Fine Gain    1.000000
+61108%s  50.00000%c      P61108.  TotalGain    50.00000
+61110%s     75008%c      P61110.  Zero Adj25     75008
+61111%s    -19672%c      P61111.  Zero Adj50    -19672
+61112%s   -209579%c      P61112.  Zero Ad100   -209579
+61113%s  0.942877%c      P61113.  Gain Adj1   0.942877
+61114%s  0.946708%c      P61114.  Gain Adj2   0.946708
+61115%s  0.956317%c      P61115.  Gain Adj4   0.956317
+61116%s  0.957503%c      P61116.  Gain Adj8   0.957503
+61117%s     -4784%c      P61117.  AIN  NROff     -4784
+61118%s     -5438%c      P61118.  AIN  NROff     -5438
+61119%s     -7237%c      P61119.  AIN  NROff     -7237
+61120%s     -8774%c      P61120.  AIN  NROff     -8774
+61121%s     -3906%c      P61121.  VREF NROff      -3906
+61122%s 110953%c         P61122.  SN:  110953
+61123%sGOOD!%c           P61123.  BckUp GOOD!
+61150%s    0%c           P61150.  #ofLC     0
+
+
+
+
+
+64100%s0%c               P64100.  LnCnt     0
+64101%s0%c               P64101.  ErCnt     0
+64102%sNone!%c           P64102.  1stEr None!
+64103%s0%c               P64103.  Debug Off
+
+
+2.1P=0%o
+3.1P=0%o
+6.1P=0%o
+9.1P=0%o
+24.1P=0%o
+27.1P=0%o
+80.1P=10%o
+80.2P=8.25%o
+80.3P=3%o
+80.4P=0%o
+80.5P=0%o
+
+1H%d                     Set LCD to large font
+P1,1c,F4%C               Clear first four lines of LCD
+
+64102%s                  View errors after uploading!

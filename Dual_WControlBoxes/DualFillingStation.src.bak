@@ -1,0 +1,2098 @@
+------------------------------------------------------------------------------
+-- Program Name: DualFillingStation
+--
+-- Copyright 2017 Total Scale Service Inc as an unpublished work. 
+-- All Rights Reserved.
+--
+-- The information contained herein is confidential property of 
+-- Company Name.  The use, copying, transfer or disclosure of such
+-- information is prohibited except by express written agreement with
+-- Company Name.
+--
+-- First written on December 18, 2017 by Matthew Burkett.
+--
+-- Module Description:
+-- This file is the iRite source code for a 920i program.
+--
+-- This program will monitor and fill product on two scales up to 
+-- a given value.  It will track the final amounts filled on each scale.
+------------------------------------------------------------------------------
+
+-- Please keep all lines 79 characters or less. 
+-- This line is exactly 79 characters long. ----------------------------------
+
+
+-- The name of the program is always the first line of code.
+program DualFillingStation;
+
+-- Put Include (.iri) file here.  
+#include import.iri   
+
+  ----------------------------------------------------------------------------
+  -- Begin constants and aliases definitions here.
+  
+  g_csProgName : constant string := "Dual Fill";  
+  g_csVersion : constant string := "0.01";
+ 
+  -- End of constants and aliases.
+  ----------------------------------------------------------------------------
+  
+
+  ----------------------------------------------------------------------------
+  -- Begin user created types (enumerations, records, arrays) definitions.
+  type BayStatusType is (Idle, 
+                            Selected,
+                            Filling,
+                            Paused,
+                            FreeFall,
+                            Short,
+                            Over,
+                            Completed);
+
+  type SystemStatusType is (Ok,
+                            Batching,
+                            Crash,
+                            Diag,
+                            STOP,
+                            Error,
+                            Reports,
+                            Scale_Ok,
+                            Scale_Error,
+                            Setup,
+                            Startup);
+  
+  type EntryType  is (Ticket, Target, PreAct, Band, Save, Pass, Motion);                          
+
+  -- End of user created types (enumerations, records, arrays).
+  ----------------------------------------------------------------------------
+
+
+
+  ----------------------------------------------------------------------------
+  -- Start global variables definitions here.  Don't forget to initialize 
+  -- them in the system startup event handler.
+  
+  g_iBuild       : integer;
+  g_srcResult    : SysCode;
+  g_iTicket      : integer;
+  g_iTargetWt      : integer;
+  g_iPreActWt      : integer;
+  g_iBandWt        : integer;
+  g_iRecordSave   : integer;
+  g_rCurrentWeight1 : real;
+  g_rCurrentWeight2 : real;
+  g_rStartingWt   : real;
+  g_iSelectedScale  : integer;
+  g_EStop        : integer;
+  g_iCanStartScale : integer;
+  g_LastTicketDate : string;
+  g_iTodayTicketCounter   : integer;
+  g_iBay1TicketCounter : integer;
+  g_iBay2TicketCounter  : integer;  
+  g_Debounce  : integer;  --Debounce variable.
+  
+  g_Scale1Status  : SystemStatusType;
+  g_Scale2Status  : SystemStatusType;
+  
+  g_Bay1Status  : BayStatusType;
+  g_Bay2Status  : BayStatusType;
+  g_SystemStatus  : SystemStatusType;
+  g_EntryCategory : EntryType;
+  
+  
+  
+
+  -- End of global variables.  
+  ----------------------------------------------------------------------------
+
+
+  ----------------------------------------------------------------------------
+  -- Start functions and procedures definitions here.
+  
+
+    
+  ---------------------------------------------------------------------------- 
+  --  Procedure Name    : DisplayVersion 
+  --  Created by        : Company Name or Programmer Name
+  --  Last modified on  : Jan 15, 2002  
+  --  Purpose           : This procedure will diplay the program name and
+  --                      version number to the diplay. 
+  --  Value Parameters  : none
+  --  Variable Params   : none
+  --  Side Effects      : The program name and version is put on the display.
+  ---------------------------------------------------------------------------- 
+  procedure DisplayVersion; 
+  
+  begin
+   
+    DisplayStatus(g_csProgName + " V1.00");
+  
+  end;
+
+
+
+
+function NextTicket:integer;
+--Declaration Section
+SetupDB : SetupDatabase;
+TicketID  : integer;
+
+begin
+
+  if SetupDB.GetFirst <> SysOk then
+               
+    SetLabelText(lbl10s1,"Index Error, Call 208-344-8644");
+    g_SystemStatus:=Crash;
+   
+  else
+  
+    TicketID:=SetupDB.Ticket+1;
+    SetupDB.Ticket:=TicketID;
+    
+    if SetupDB.Update <> SysOk then
+    
+      SetLabelText(lbl10s1,"Ticket Error, Call 208-344-8644");
+      g_SystemStatus:=Crash;
+      
+    end if;
+    
+  end if;
+
+  return TicketID;
+  
+end;
+
+  
+  procedure FinishTote1;
+  TotesDB : TotesDatabase;
+  TicketID  : integer;
+  rWeight : real;
+  sSuccessful  : SysCode;
+          
+  begin
+    
+    SetLabelText(lbl3s1,"Finished.");
+    SetLabelText(lbl10s1,"Saving Tote...");
+    StartTimer(6);
+    sSuccessful := GetGross(Scale1,Primary,rWeight);
+      
+    if sSuccessful = SysOk then
+    
+      g_rCurrentWeight1 := rWeight-g_rStartingWt;
+      g_Scale1Status := Scale_Ok;
+                   
+    else
+    
+      g_Scale1Status := Scale_Error;
+      SetLabelText(lbl3s1,"Scale Error");
+      
+    end if;
+  
+    TicketID:=NextTicket;
+    
+    if g_iRecordSave then  
+      TotesDB.Ticket:=TicketID;
+      TotesDB.ToteWt:=g_rCurrentWeight1;
+      TotesDB.Station:=1;
+      TotesDB.TimeFill:=SystemTime;
+      TotesDB.Add;
+    end if;
+    
+    g_iTicket:=TicketID;
+    
+    if Date$(SystemTime) <> g_LastTicketDate then
+    
+      g_iTodayTicketCounter:=0;
+      g_iBay1TicketCounter:=0;
+      g_iBay2TicketCounter:=0;
+      g_LastTicketDate:=Date$(SystemTime);
+    
+    end if;
+    g_iTodayTicketCounter:=g_iTodayTicketCounter+1;
+    g_iBay1TicketCounter:=g_iBay1TicketCounter+1;    
+    return;
+    
+  end;
+  
+  procedure FinishTote2;
+  TotesDB : TotesDatabase;
+  TicketID  : integer;
+  rWeight : real;
+  sSuccessful  : SysCode;
+          
+  begin
+    
+    SetLabelText(lbl4s1,"Finished.");
+    SetLabelText(lbl10s1,"Saving Tote...");
+    StartTimer(6);
+    
+    sSuccessful := GetGross(Scale2,Primary,rWeight);
+      
+    if sSuccessful = SysOk then
+    
+      g_rCurrentWeight2 := rWeight-g_rStartingWt;
+      g_Scale2Status := Scale_Ok;
+                   
+    else
+    
+      g_Scale1Status := Scale_Error;
+      SetLabelText(lbl4s1,"Scale Error");
+      
+    end if;
+        
+    TicketID:=NextTicket; 
+    g_iTicket:=TicketID;
+    if g_iRecordSave then
+      TotesDB.Ticket:=TicketID;
+      TotesDB.ToteWt:=g_rCurrentWeight2;
+      TotesDB.Station:=2;
+      TotesDB.TimeFill:=SystemTime;
+      TotesDB.Add;
+    end if;
+    
+    if Date$(SystemTime) <> g_LastTicketDate then
+    
+      g_iTodayTicketCounter:=0;
+      g_iBay1TicketCounter:=0;
+      g_iBay2TicketCounter:=0;
+      g_LastTicketDate:=Date$(SystemTime);
+    
+    end if;
+    g_iTodayTicketCounter:=g_iTodayTicketCounter+1;
+    g_iBay2TicketCounter:=g_iBay2TicketCounter+1;    
+    
+    return;
+    
+  end;
+  
+    
+procedure ResetScale1;
+
+begin
+
+  g_rCurrentWeight1:=0;
+  g_rStartingWt:=0;
+  g_Bay1Status:=Idle;
+  g_iSelectedScale:=0;
+  g_SystemStatus:=Ok;
+  
+  return;
+  
+end;
+ 
+   
+procedure ResetScale2;
+
+begin
+
+  g_rCurrentWeight2:=0;
+  g_rStartingWt:=0;
+  g_Bay2Status:=Idle;
+  g_iSelectedScale:=0;
+  g_SystemStatus:=Ok;
+  
+  return;
+  
+end;
+
+  
+  
+  procedure Scale1FailedToSettle;
+  
+  begin
+  
+  
+  
+    return;
+    
+  end;
+  
+  
+  procedure Scale2FailedToSettle;
+  
+  begin
+  
+  
+  
+    return;
+    
+  end;
+  
+    
+procedure Main_Screen;
+
+begin
+
+  if g_SystemStatus = Ok or g_SystemStatus = Batching then
+    
+    SelectScreen(1);
+    SetSymbolState(15,2);
+    SetSymbolState(16,2);
+    
+    if g_Bay1Status = Filling or g_Bay2Status = Filling then
+      
+      if g_Bay1Status = Filling then 
+        
+        SetWidgetVisibility(3,VOn);
+        SetSymbolState(3,2);
+        SetWidgetVisibility(4,VOff);
+        SetLabelText(lbl3s1,"Filling");
+        
+      elsif g_Bay2Status = Filling then 
+      
+        SetWidgetVisibility(4,VOn);
+        SetSymbolState(4,2);
+        SetWidgetVisibility(3,VOff);
+        SetLabelText(lbl4s1,"Filling");
+        
+      end if;
+      
+      SetSoftkeyText(1,"Locked");
+      SetSoftkeyText(2,"Locked");
+      SetSoftkeyText(3,"Pause");
+      SetSoftkeyText(4,"");
+      SetSoftkeyText(5,"");
+    
+    elsif g_Bay1Status = Paused or g_Bay2Status = Paused then
+      
+      if g_Bay1Status = Paused then 
+        
+        SetWidgetVisibility(3,VOn);
+        SetSymbolState(3,1);
+        SetWidgetVisibility(4,VOff);
+        SetLabelText(lbl3s1,"Paused");
+        
+      elsif g_Bay2Status = Paused then 
+      
+        SetWidgetVisibility(4,VOn);
+        SetSymbolState(4,2);
+        SetWidgetVisibility(3,VOff);
+        SetLabelText(lbl4s1,"Paused");
+        
+      end if;
+      
+      SetSoftkeyText(1,"Locked");
+      SetSoftkeyText(2,"Locked");
+      SetSoftkeyText(3,"Resume");
+      SetSoftkeyText(4,"Cancel");
+      SetSoftkeyText(5,"");
+    
+    elsif g_Bay1Status = Completed or g_Bay2Status = Completed then
+      
+      if g_Bay1Status = Completed then 
+        
+        SetLabelText(lbl3s1,"Completed");
+        
+      elsif g_Bay2Status = Completed then 
+      
+        SetLabelText(lbl4s1,"Completed");
+        
+      end if;
+      
+      SetSoftkeyText(1,"");
+      SetSoftkeyText(2,"");
+      SetSoftkeyText(3,"");
+      SetSoftkeyText(4,"");
+      SetSoftkeyText(5,"Finish");
+      
+    elsif g_Bay1Status = Over or g_Bay2Status = Over then
+      
+      if g_Bay1Status = Over then 
+        
+        SetWidgetVisibility(3,VOn);
+        SetSymbolState(3,1);
+        SetWidgetVisibility(4,VOff);
+        SetLabelText(lbl3s1,"Over");
+        
+      elsif g_Bay2Status = Over then 
+      
+        SetWidgetVisibility(4,VOn);
+        SetSymbolState(4,1);
+        SetWidgetVisibility(3,VOff);
+        SetLabelText(lbl4s1,"Over");
+        
+      end if;
+      
+      SetSoftkeyText(1,"");
+      SetSoftkeyText(2,"");
+      SetSoftkeyText(3,"");
+      SetSoftkeyText(4,"");
+      SetSoftkeyText(5,"Finish");
+    
+    elsif g_Bay1Status = Idle or g_Bay2Status = Idle then
+      
+      if g_Bay1Status = Idle then
+        SetWidgetVisibility(1,VOff);
+        SetWidgetVisibility(3,VOff);
+        SetLabelText(lbl3s1,"Idle");
+       
+      end if;
+      if g_Bay2Status = Idle then
+        SetWidgetVisibility(2,VOff);
+        SetWidgetVisibility(4,VOff);
+        SetLabelText(lbl4s1,"Idle");
+      end if;
+            
+      SetSoftkeyText(1,"Select Left");
+      SetSoftkeyText(2,"Select Right");
+      SetSoftkeyText(3,"");
+      SetSoftkeyText(4,"Setup");
+      SetSoftkeyText(5,"Diag");
+      
+    end if;
+  
+  elsif g_SystemStatus = Diag then
+  
+    SelectScreen(2);
+    SetSoftkeyText(1,"Divert L");
+    SetSoftkeyText(2,"Divert R");
+    SetSoftkeyText(3,"Feed");
+    SetSoftkeyText(4,"Reports");
+    SetSoftkeyText(5,"Main");
+  
+  elsif g_SystemStatus = STOP then
+  
+    SelectScreen(1);
+    SetSoftkeyText(1,"");
+    SetSoftkeyText(2,"");
+    SetSoftkeyText(3,"");
+    SetSoftkeyText(4,"");
+    SetSoftkeyText(5,"");
+    
+  end if;
+  
+  return;
+  
+end;
+
+
+procedure Save_Config;
+--Declaration Section
+
+SetupDB : SetupDatabase;
+
+begin
+
+  if SetupDB.GetFirst <> SysOk then
+  
+    SelectScreen(1);
+    SetLabelText(lbl10s1,"Save Error, Call 208-344-8644");
+    g_SystemStatus:=Crash;
+    
+  else
+    
+    SetupDB.Ticket:=g_iTicket;
+    SetupDB.Target:=g_iTargetWt;
+    SetupDB.PreAct:=g_iPreActWt;
+    SetupDB.Band:=g_iBandWt;
+    SetupDB.SaveRec:=g_iRecordSave;
+    
+    if SetupDB.Update<>SysOk then
+      
+      SelectScreen(1);
+      SetLabelText(lbl10s1,"Save Error, Call 208-344-8644");
+      g_SystemStatus:=Crash;
+    
+    end if;
+    
+  end if;
+        
+end;
+
+
+  
+procedure Load_Config;
+--Declaration Section
+
+SetupDB : SetupDatabase;
+
+begin
+
+  if SetupDB.GetFirst <> SysOk then
+  
+    SetupDB.Ticket:=0;
+    SetupDB.Target:=3000;
+    SetupDB.PreAct:=100;
+    SetupDB.Band:=20;    
+    SetupDB.SaveRec:=1;  -- This determins if records are saved.
+    
+    g_iTicket:=setupDB.Ticket;
+    g_iTargetWt:=SetupDB.Target;
+    g_iPreActWt:=SetupDB.PreAct;
+    g_iBandWt:=SetupDB.Band;
+    g_iRecordSave:=SetupDB.SaveRec;
+    
+    if SetupDB.Add<>SysOk then
+    
+      SetLabelText(lbl10s1,"Config Error, Call 208-344-8644");
+      g_SystemStatus:=Crash;
+      
+    else
+    
+      g_SystemStatus:=Ok;
+    
+    end if;
+    
+  else
+    
+    g_iTicket:=setupDB.Ticket;
+    g_iTargetWt:=SetupDB.Target;
+    g_iPreActWt:=SetupDB.PreAct;
+    g_iBandWt:=SetupDB.Band;
+    g_iRecordSave:=SetupDB.SaveRec;
+    
+  end if;
+        
+end;
+
+  procedure Setup_Screen;
+  -- Declaration Section
+ 
+  begin
+    
+    SelectScreen(3);
+    
+    SetLabelText(lbl6s3,IntegerToString(g_iTicket,6));
+    SetLabelText(lbl7s3,IntegerToString(g_iTargetWt,6));
+    SetLabelText(lbl8s3,IntegerToString(g_iPreActWt,6));
+    SetLabelText(lbl9s3,IntegerToString(g_iBandWt,6));
+    
+    if g_iRecordSave = 0 then
+    
+      SetLabelText(lbl11s3,"No");
+      
+    else
+    
+      SetLabelText(lbl11s3,"Yes");
+      
+    end if;
+    
+    SetSoftkeyText(1,"Ticket");
+    SetSoftkeyText(2,"Target");
+    SetSoftkeyText(3,"Pre-Act");
+    SetSoftkeyText(4,"Band");
+    SetSoftkeyText(5,"Main Menu");
+  
+    return;
+    
+  end;
+  
+  procedure Diagnostics_Screen;
+  -- Declaration Section
+  
+  begin
+  
+    SelectScreen(2); 
+    
+    SetSoftkeyText(1,"Divert L");
+    SetSoftkeyText(2,"Divert R");
+    SetSoftkeyText(3,"Feed");
+    SetSoftkeyText(4,"Reports");
+    SetSoftkeyText(5,"Main");
+
+    return;
+    
+  end;
+  
+procedure Reports_Screen;
+
+begin
+
+  SelectScreen(5);
+  
+  SetLabelText(lbl3s5,IntegerToString(g_iTodayTicketCounter,3));
+  SetLabelText(lbl5s5,IntegerToString(g_iBay1TicketCounter,3));
+  SetLabelText(lbl7s5,IntegerToString(g_iBay2TicketCounter,3));
+  
+  SetSoftkeyText(1,"");
+  SetSoftkeyText(2,"");
+  SetSoftkeyText(3,"");
+  SetSoftkeyText(4,"");
+  SetSoftkeyText(5,"Main");
+  
+  return;
+  
+end;
+
+  procedure DivertToRight;
+  --Declaration Section
+  
+  begin
+    
+        
+    SetDigout(0,2,1);
+    StartTimer(2);
+    StartTimer(6);
+    
+    return;
+    
+  end;
+  
+  procedure DivertToLeft;
+  --Declaration Section
+  
+  begin
+    
+          
+    SetDigout(0,1,1); 
+    StartTimer(2);
+    StartTimer(6);
+    
+    return;
+    
+  end;
+  
+procedure PauseFilling1;
+
+begin
+  
+  if Estop then
+    
+    StopTimer(1);
+    SetLabelText(lbl3s1,"Paused");
+    g_Bay1Status := Paused;
+    
+    WriteLn(2,"Bay 1 Fill Paused.");
+    SetLabelText(lbl10s1,"Paused:  Green = Resume / Red = Cancel");
+    SetDigout(0,3,0);  --Turn off the Feed;
+    
+    Main_Screen;
+    
+  end if;
+
+  return;
+  
+end;
+
+procedure PauseFilling2;
+
+begin
+
+  if Estop then
+    
+    StopTimer(1);
+    SetLabelText(lbl4s1,"Paused");
+    g_Bay2Status := Paused;
+    
+    WriteLn(2,"Bay 2 Fill Paused.");
+    SetLabelText(lbl10s1,"Paused:  Green = Resume / Red = Cancel");
+    
+    SetDigout(0,3,0);  --Turn off the Feed;
+    
+    Main_Screen;
+    
+  end if;
+
+  return;
+  
+end;
+
+  
+procedure StartFilling1;
+--Declaration Section
+CurWt : real;
+
+begin
+  
+  if Estop then
+    
+      GetGross(Scale1,Primary,CurWt);
+      if CurWt < 50 then
+        g_rStartingWt:=CurWt;
+        WriteLn(2,"Weight below 50lbs, setting starting weight to scale weight");
+      else
+        g_rStartingWt:=0;
+        WriteLn(2,"Weight over 50lbs, setting starting weight to 0");
+      end if;
+      
+      SetLabelText(lbl3s1,"Filling");
+      StartTimer(1);
+      
+      g_Bay1Status := Filling;
+      g_SystemStatus:=Batching;
+      
+      WriteLn(2,"Filling...");
+      SetDigout(0,3,1); -- Turn on the Feed;
+      WriteLn(2,"Gate Opened, filling started.");
+    
+      Main_Screen;
+  
+  else
+    WriteLn(2,"Cannot Fill, E-Stop is engaged");    
+  end if;
+
+  return;
+  
+end;
+  
+procedure StartFilling2;
+--Declaration Section
+CurWt : real;
+
+begin
+
+  if Estop then
+    
+    GetGross(Scale2,Primary,CurWt);
+       
+    if CurWt < 50 then
+      g_rStartingWt:=CurWt;
+      WriteLn(2,"Weight below 50lbs, setting starting weight to scale weight");
+    else
+      g_rStartingWt:=0;
+      WriteLn(2,"Weight over 50lbs, setting starting weight to 0");
+    end if;
+    
+    SetLabelText(lbl4s1,"Filling");
+    StartTimer(1);
+    
+    g_Bay2Status := Filling;
+    g_SystemStatus:=Batching;
+    
+    SetDigout(0,3,1); -- Turn on the Feed;
+    WriteLn(2,"Gate Opened, filling started.");
+    
+    Main_Screen;
+    
+  else
+    WriteLn(2,"Cannot Fill, E-Stop is engaged");    
+  end if;
+
+  return;
+  
+end;
+
+procedure Short_Fill_Save;
+
+begin
+
+    if g_Bay1Status = Short then
+            
+        StartTimer(6);
+        StopTimer(3); -- Prevent the timer from firing after finishing
+        WriteLn(2," - Saving Short Fill");
+        FinishTote1;
+        ResetScale1;
+        Main_Screen;
+        
+      elsif g_Bay2Status = Short then 
+        
+        StartTimer(6);
+        StopTimer(4);  -- Prevent the timer from firing after finishing
+        WriteLn(2," - Saving Short Fill");
+        FinishTote2;
+        ResetScale2;
+        Main_Screen;
+      
+      end if;    
+          
+    return;
+    
+end;
+
+  
+
+procedure EStop_Pressed;
+
+begin
+  
+  g_Estop:=0;
+  g_SystemStatus:=STOP;
+  
+  StopTimer(1);
+  
+  SetLabelText(lbl3s1,"Stopped");
+  SetLabelText(lbl4s1,"Stopped");
+  SetLabelText(lbl10s1,"EStop Pressed");
+  
+  SetDigout(0,1,0);  -- Turn off all Outputs
+  SetDigout(0,2,0);  
+  SetDigout(0,3,0);
+  SetSymbolState(15,1);
+  SetSymbolState(16,1);
+  
+  SetSoftkeyText(1,"");
+  SetSoftkeyText(2,"");
+  SetSoftkeyText(3,"");
+  SetSoftkeyText(4,"");
+  SetSoftkeyText(5,"");
+  
+  if g_Bay1Status = Filling then
+  
+    g_Bay1Status:=Paused; 
+    
+  elsif g_Bay1Status = FreeFall or g_Bay1Status = Short or g_Bay1Status = Completed then
+    
+    g_Bay1Status:=Completed;  -- Save the record and wait for E-Stop to clear    
+    FinishTote1;
+    Main_Screen;
+   
+  elsif g_Bay2Status = Filling then
+  
+    g_Bay2Status:=Paused; 
+    
+  elsif g_Bay2Status = FreeFall or g_Bay2Status = Short or g_Bay2Status = Completed then
+    
+    g_Bay1Status:=Completed;  -- Save the record and wait for E-Stop to clear    
+    FinishTote2;
+    Main_Screen;
+   
+  end if;   
+    
+  return;
+  
+end;
+
+procedure EStop_Released;
+
+begin
+
+  g_Estop:=1;
+  g_SystemStatus:=Ok;
+  
+  SetLabelText(lbl10s1,"EStop Reset");
+  SetSymbolState(15,2);
+  SetSymbolState(16,2);
+  StartTimer(6);
+  
+  if g_Bay1Status = Paused then
+  
+    PauseFilling1;
+    
+  elsif g_Bay1Status = Completed then
+  
+    ResetScale1;
+    Main_Screen;
+  
+  elsif g_Bay2Status = Paused then
+  
+    PauseFilling2;
+  
+  elsif g_Bay2Status = Completed then
+  
+    ResetScale2;
+    Main_Screen;
+      
+  end if;
+    
+  return;
+  
+end;
+
+
+procedure Check_EStop; --   At Startup check E-stop state
+iBit  : integer;
+
+begin
+
+  GetDigin(0,4,iBit);
+  
+  if iBit then
+  
+    EStop_Pressed;  
+        
+  else
+    
+    g_Estop:=1;
+    SetLabelText(lbl10s1,"");
+    
+    if g_SystemStatus = Startup then
+    
+      g_SystemStatus:=Ok;
+      
+    end if;
+  
+  end if;
+    
+  return;
+  
+end;
+
+   
+  function Scale1Ok:integer;
+  -- Declaration Section
+  rWeight : real;
+  sSuccessful  : SysCode;
+  ScaleIsOk : integer;
+  
+  begin
+    
+    if g_Estop = 0 then
+    
+      ScaleIsOk := 0;
+      
+    else
+      
+      sSuccessful := GetGross(Scale1,Primary,rWeight);
+      
+      if sSuccessful = SysOk then
+      
+        g_rCurrentWeight1 := rWeight;
+        g_Scale1Status := Scale_Ok;
+        ScaleIsOk:=rWeight;
+              
+      else
+      
+        g_Scale1Status := Scale_Error;
+        SetLabelText(lbl3s1,"Scale Error");
+        ScaleIsOk:=-1;
+        
+      end if;
+    
+    end if;
+          
+  return ScaleIsOk;
+
+end;
+
+function Scale1Motion:integer;
+iMotion : integer;
+
+begin
+
+  InMotion(1,iMotion);
+
+  return(iMotion);
+  
+end;
+  
+function Scale2Motion:integer;
+iMotion : integer;
+
+begin
+
+  InMotion(2,iMotion);
+
+  return(iMotion);
+  
+end;
+
+
+  function Scale2Ok:integer;
+  -- Declaration Section
+  rWeight : real;
+  sSuccessful  : SysCode;
+  ScaleIsOk : integer;
+  
+  begin
+    
+    if g_Estop then
+    
+      ScaleIsOk := 0;
+      
+    else
+    
+      sSuccessful := GetGross(Scale2,Primary,rWeight);
+      
+      if sSuccessful = SysOk then
+      
+        g_rCurrentWeight2 := rWeight;
+        g_Scale2Status := Scale_Ok;
+        ScaleIsOk:=rWeight;
+              
+      else
+      
+        g_Scale2Status := Scale_Error;
+        SetLabelText(lbl3s1,"Scale Error");
+        ScaleIsOk:=-1;
+        
+      end if;
+    
+    end if;
+            
+  return ScaleIsOk;
+
+end;
+
+
+procedure SelectScale1;
+
+begin
+
+  if g_SystemStatus = Batching then
+    
+    SetLabelText(lbl10s1,"Cannot Select while Processing");
+    StartTimer(6);
+        
+  else
+    
+    SetWidgetVisibility(1,VOn);
+    SetWidgetVisibility(3,VOn);
+    SetSymbolState(3,1);
+    SetWidgetVisibility(2,VOff);
+    SetWidgetVisibility(4,VOff);
+    SetLabelText(lbl3s1,"Selected");
+    SetLabelText(lbl4s1,"Idle");
+    SetLabelText(lbl10s1,"Bay 1 Selected.");
+
+    SetSoftkeyText(1,"Select Left");
+    SetSoftkeyText(2,"Select Right");
+    SetSoftkeyText(3,"Start Fill");
+    SetSoftkeyText(4,"");
+    SetSoftkeyText(5,"Diag");
+      
+    g_iSelectedScale:=1;
+    g_Bay1Status := Selected;
+    g_Bay2Status := Idle;
+    g_iCanStartScale:=1;
+    StartTimer(5);
+  
+  end if;
+  
+  return;
+  
+end;
+
+procedure SelectScale2;
+
+begin
+
+  if g_SystemStatus = Batching then
+    
+    SetLabelText(lbl10s1,"Cannot Select while Processing");
+    StartTimer(6);
+        
+  else
+    
+    SetWidgetVisibility(2,VOn);
+    SetWidgetVisibility(4,VOn);
+    SetSymbolState(4,1);
+    SetWidgetVisibility(1,VOff);
+    SetWidgetVisibility(3,VOff);
+    SetLabelText(lbl3s1,"Idle");
+    SetLabelText(lbl4s1,"Selected");
+    SetLabelText(lbl10s1,"Bay 2 Selected.");
+    
+    SetSoftkeyText(1,"Select Left");
+    SetSoftkeyText(2,"Select Right");
+    SetSoftkeyText(3,"Start Fill");
+    SetSoftkeyText(4,"");
+    SetSoftkeyText(5,"Diag");
+      
+    g_iSelectedScale:=2;
+    g_Bay1Status := Idle;
+    g_Bay2Status := Selected;
+    g_iCanStartScale:=1;
+    StartTimer(5);
+      
+  end if;
+
+  return;
+  
+end;
+
+
+  -- End of functions and procedures.
+  ----------------------------------------------------------------------------
+
+
+  ----------------------------------------------------------------------------
+  -- Begin event handler definitions here.
+
+handler Cmd2Handler;--send Tote Record
+--Declaration Section
+Text : string;
+TotesDB : TotesDatabase;
+
+begin             
+    if TotesDB.GetFirst=SysOk then
+        Text:=IntegerToString(TotesDB.Ticket,6)+","+RealToString(TotesDB.ToteWt,6,0)+","+IntegerToString(TotesDB.Station,2)+","+Date$(TotesDB.TimeFill)+","+Time$(TotesDB.TimeFill);
+	    
+        WriteLn(EventPort,Text);
+    end if;
+    
+    return;
+
+end;
+
+
+handler Cmd3Handler; --Delete McCain Record
+--Declaration Section
+TotesDB : TotesDatabase;
+
+begin                  
+
+  TotesDB.GetFirst;
+  TotesDB.Ticket:=StringToInteger(EventString);
+  
+  if TotesDB.FindFirst(1)=SysOk then
+    TotesDB.Delete;
+    WriteLn(EventPort,"OK");
+  else
+    WriteLn(EventPort,"Fail");
+  end if;
+  
+  return;
+
+end;
+
+
+handler Timer1Trip;  -- This checks to see if the scale has finished filling yet.
+-- Declaration Section
+rWeight : real;
+sSuccessful  : SysCode;
+CurrentWt : real;
+TargetCutOff  : real;
+begin
+  
+  if g_Bay1Status = Filling then
+    
+    --WriteLn(2,"Bay1Status = Filling");
+    sSuccessful := GetGross(Scale1,Primary,rWeight);
+      
+    if sSuccessful = SysOk then
+    
+      g_rCurrentWeight1 := rWeight;
+      g_Scale1Status := Scale_Ok;
+      CurrentWt:= g_rCurrentWeight1 - g_rStartingWt;
+      TargetCutOff:= g_iTargetWt-g_iPreActWt;
+      
+      --WriteLn(2,RealToString(CurrentWt,6,0)+" "+RealToString(TargetCutOff,6,0));
+      
+      if CurrentWt > TargetCutOff then
+      
+        --WriteLn(2,"Tripped, Stopping Auger");
+        g_Bay1Status:=FreeFall;
+        SetLabelText(lbl3s1,"FreeFall...");
+        SetDigout(0,3,0);
+        StopTimer(1);
+        StartTimer(3);
+        SetSymbolState(3,1);
+        
+      end if;
+             
+    else
+    
+      g_Scale1Status := Scale_Error;
+      SetLabelText(lbl3s1,"Scale Error");
+      SetDigout(0,3,0);  -- Turn off Feed
+      SetSymbolState(3,1);
+      SetLabelText(lbl10s1,"Error Reading Scale 1, Resetting");
+      StartTimer(6);
+      ResetScale1;
+      Main_Screen;
+        
+    end if;
+  
+  elsif g_Bay2Status = Filling then  
+    
+    --Write(2,"Bay2Status = Filling  = ");     
+    sSuccessful := GetGross(Scale2,Primary,rWeight);
+    
+    if sSuccessful = SysOk then
+    
+      g_rCurrentWeight2 := rWeight;
+      g_Scale2Status := Scale_Ok;
+      CurrentWt:= g_rCurrentWeight2 - g_rStartingWt;
+      TargetCutOff:= g_iTargetWt-g_iPreActWt;
+      
+      --WriteLn(2,RealToString(CurrentWt,6,0)+" "+RealToString(TargetCutOff,6,0));
+      
+      if CurrentWt > TargetCutOff then
+        
+        WriteLn(2,"Tripped, Stopping Auger");
+        g_Bay2Status:=FreeFall; 
+        SetLabelText(lbl4s1,"FreeFall...");
+        SetDigout(0,3,0);
+        StopTimer(1);
+        StartTimer(4);
+        SetSymbolState(4,1);
+        
+      end if;
+             
+    else
+    
+      g_Scale1Status := Scale_Error;
+      SetLabelText(lbl3s1,"Scale Error");
+      SetDigout(0,3,0);  -- Turn off Feed
+      SetLabelText(lbl10s1,"Error Reading Scale 2, Resetting");
+      StartTimer(6);
+      ResetScale2;
+      Main_Screen;
+      
+    end if;
+  
+  end if;
+  
+  return;
+  
+end;
+  
+handler Timer2Trip; -- Divert Timer to shut off Signal after 1 sec
+--Declaration Section
+
+begin
+
+  SetDigout(0,1,0);
+  SetDigout(0,2,0);
+  
+  return;
+  
+end;
+
+handler Timer3Trip; -- Check For Motion on Scale 1
+-- Declaration Section
+iCounter  : integer;
+iFullCount  : integer;
+intMotion : integer;
+
+begin
+  
+  Write(2,"Timer 3 - ");
+  iFullCount:=10;
+  
+    iCounter:=iCounter+1;
+    Write(2,"Counter = "+IntegerToString(iCounter,2));
+    
+    if Scale1Motion and iCounter <= iFullCount then
+      
+      Write(2," - Motion ");
+      StartTimer(3);
+      SetLabelText(lbl10s1,"Seconds In Motion = "+IntegerToString(iCounter,2));
+      
+    else
+      
+      Write(2,"Stable or Timeout");
+      
+      if Scale1Motion = 1 then
+        
+        g_EntryCategory:=Motion;
+        DisplayStatus("Scale has Motion. Press");
+        PromptUser("Enter to Save Weight");
+                
+      end if;
+      
+      iCounter:=0;
+      GetGross(1,Primary,g_rCurrentWeight1);
+      WriteLn(2,"Current Wt: "+IntegerToString(g_rCurrentWeight1,6));
+      WriteLn(2,"Starting Wt:"+RealToString(g_rStartingWt,3,0));
+      WriteLn(2,"Target Wt:  "+IntegerToString(g_iTargetWt,6));
+      WriteLn(2,"Acceptance: "+IntegerToString(g_iBandWt,6));
+      
+      if (g_rCurrentWeight1 - g_rStartingWt) < (g_iTargetWt - g_iBandWt) then
+        
+        WriteLn(2," - Weighment Short");
+        
+        g_Bay1Status:=Short;
+        SetLabelText(lbl3s1,"Short");
+      
+        SetSoftkeyText(1,"");
+        SetSoftkeyText(2,"");
+        SetSoftkeyText(3,"Bump");
+        SetSoftkeyText(4,"");
+        SetSoftkeyText(5,"Finish");
+        
+        StartTimer(3);
+        
+      else
+        
+        StartTimer(6);
+        g_Bay1Status:=Completed;
+        WriteLn(2," - Saving");
+        FinishTote1;
+        ResetScale1;
+        Main_Screen;
+      
+      end if;
+          
+    end if;
+  
+  return;
+  
+end;
+ 
+handler Timer4Trip; -- Check For Motion on Scale 2
+-- Declaration Section
+iCounter  : integer;
+iFullCount  : integer;
+iActualWt : integer;
+iAcceptanceWt : integer;
+
+begin
+  
+  Write(2,"Timer 4 - ");
+  
+  iFullCount:=10;
+  
+  iCounter:=iCounter+1;
+  Write(2,"Counter = "+IntegerToString(iCounter,2));
+    
+  if Scale2Motion and iCounter <= iFullCount then
+    
+    Write(2," - Motion ");
+     
+    SetLabelText(lbl10s1,"Seconds In Motion = "+IntegerToString(iCounter,2));
+    StartTimer(4);
+    
+  else
+    
+    Write(2,"Stable or Timeout");
+      
+    if Scale2Motion = 1 then
+        
+      g_EntryCategory:=Motion;
+      DisplayStatus("Scale has Motion. Press");
+      PromptUser("Enter to Save Weight");
+              
+    end if;
+    
+    iCounter:=0;
+    GetGross(2,Primary,g_rCurrentWeight2);
+    iActualWt:=g_rCurrentWeight2-g_rStartingWt;
+    iAcceptanceWt:=g_iTargetWt-g_iBandWt;
+    WriteLn(2,"Current Wt: "+RealToString(g_rCurrentWeight2,6,0));
+    WriteLn(2,"Starting Wt:"+RealToString(g_rStartingWt,3,0));
+    WriteLn(2,"Target Wt:  "+IntegerToString(g_iTargetWt,6));
+    WriteLn(2,"Acceptance: "+IntegerToString(g_iBandWt,6));
+    WriteLn(2,"-----------------------");
+    WriteLn(2,"Actual Wt     = "+IntegerToString(iActualWt,6));
+    WriteLn(2,"Acceptable Wt = "+IntegerToString(iAcceptanceWt,6));
+    
+    if iActualWt < iAcceptanceWt then
+      
+      WriteLn(2," - Weighment Short");
+          
+      g_Bay2Status:=Short;
+      SetLabelText(lbl4s1,"Short");
+      SetSoftkeyText(1,"");
+      SetSoftkeyText(2,"");
+      SetSoftkeyText(3,"Bump");
+      SetSoftkeyText(4,"");
+      SetSoftkeyText(5,"Finish");
+      
+      StartTimer(4);
+        
+    else
+      
+      StartTimer(6);
+    
+      WriteLn(2," - Saving...");
+      g_Bay2Status:=Completed;
+      FinishTote2;
+      ResetScale2;
+      Main_Screen;
+    
+    end if;
+      
+  end if;
+  
+  return;
+  
+end; 
+
+handler Timer5Trip; -- Allow one minute for user to start the scale.
+
+begin
+  
+  WriteLn(2,"Timer 5 Trip");
+  g_iCanStartScale:=0;
+  g_Bay1Status:=Idle;
+  g_Bay2Status:=Idle;
+  SetLabelText(lbl10s1,"Timeout Selecting Bay.  Resetting.");
+  StartTimer(6);
+  Main_Screen;
+  
+  return;
+  
+end;
+
+handler Timer6Trip;  -- Remove Messages from the screen after 5 seconds
+
+begin
+
+  SetLabelText(lbl10s1,"");
+  
+  return;
+  
+end;
+
+
+handler Timer7Trip;  -- Debounce timer
+
+begin
+
+  g_Debounce:=0;
+  
+  return;
+  
+end;
+
+ 
+handler Digins0B4Deactivate;  -- Estop has been Pressed
+--Declaration Section
+
+begin
+    
+    EStop_Pressed;
+    Main_Screen;
+    
+    return;
+
+end;
+
+handler Digins0B4Activate;  -- EStop has been Released
+--Declaration Section
+
+begin
+    
+    EStop_Released;
+    Main_Screen;
+    
+    return;
+
+end;
+
+handler Digins0B5Activate;  -- Bay 1 Diverter detected
+
+begin
+  
+  WriteLn(2,"Diverter At Bay1");
+  SelectScale1;
+  
+  return;
+  
+end;
+
+handler Digins0B6Activate;  -- Bay 2 Diverter detected
+
+begin
+  
+  WriteLn(2,"Diverter At Bay 2");
+  SelectScale2;
+  
+  return;
+  
+end;
+
+
+handler Digins2B2Activate;  -- Bay 2 Selector Pressed
+--Declaration Section
+
+begin
+    
+    WriteLn(2,"Select Bay 2 Pressed");
+    if g_Estop and g_Bay2Status = Idle and g_SystemStatus = Ok then
+      
+      if g_iSelectedScale = 2 then  -- If already on scale 2 then reselect it.
+      
+        SelectScale2;
+        
+      else                          -- If not Divert and wait for detection of diverter move
+      
+        DivertToRight;
+      
+      end if;
+    
+    elsif g_SystemStatus = Batching and (g_Bay1Status = Short or g_Bay2Status = Short)  then
+          
+        WriteLn(2," - Saving by Selector Bay 2 Press...");
+        
+        Short_Fill_Save;
+    
+    end if;
+      
+    return;
+    
+end;
+
+
+handler Digins2B5Activate;  -- Bay 1 Selector Pressed
+--Declaration Section
+
+begin
+    
+    WriteLn(2,"Select Bay 1 Pressed");
+    
+    if g_Estop and g_Bay1Status = Idle and g_SystemStatus = Ok then
+      
+      if g_iSelectedScale = 1 then  -- If already on scale 2 then reselect it.
+      
+        SelectScale1;
+        
+      else          
+        
+        DivertToLeft;
+      
+      end if;
+    
+    elsif g_SystemStatus = Batching and g_Bay1Status = Short then
+          
+        WriteLn(2," - Saving by Selector Bay 2 Press...");
+        Short_Fill_Save;
+    
+    end if;
+    
+    return;
+    
+end;
+
+handler Digins2B3Activate;  -- Bay 2 Start Button Pressed
+--Declaration Section
+
+begin
+    
+    WriteLn(2,"Bin 2 Start Pressed");
+    
+    if g_ICanStartScale then
+      WriteLn(2,"ICanStartScale is True");
+    else
+      WriteLn(2,"ICanStartScale is False");
+    end if;
+    
+    if g_Estop then
+      
+      WriteLn(2,"Estop is in Safe");
+      
+      if g_Bay2Status = Selected and g_iCanStartScale and g_SystemStatus = Ok then
+        
+        g_iCanStartScale:=0;
+        StopTimer(5);
+      
+        WriteLn(2,"Start Filling 2");
+        StartFilling2;
+      
+      elsif g_SystemStatus = Batching and g_Bay2Status = Paused then  -- System has already been running but was paused.
+        
+        WriteLn(2,"Resume Filling 2");
+        SetLabelText(lbl10s1,"Resuming Bay 2 Fill...");
+        StartTimer(6);
+        StartFilling2;
+        
+        
+      end if;
+    
+    end if;
+    
+    return;
+    
+end;
+
+handler Digins2B6Activate;  -- Bay 1 Start Button Pressed
+--Declaration Section
+
+begin
+    
+    WriteLn(2,"Bin 1 Start Pressed");
+    if g_Estop then
+      
+      if g_Bay1Status = Selected and g_iCanStartScale and g_SystemStatus = Ok then
+        
+        g_iCanStartScale:=0;
+        StopTimer(5);
+        
+        WriteLn(2,"Bay 1 Started");
+        StartFilling1;
+      
+      elsif g_SystemStatus = Batching and g_Bay1Status = Paused then
+        
+        WriteLn(2,"Bay 1 Resumed");
+        SetLabelText(lbl10s1,"Resuming Bay 1 Fill...");
+        StartTimer(6);
+        StartFilling1;
+        
+        
+      end if;
+            
+    end if;
+      
+    return;
+    
+end;
+
+handler Digins2B4Activate;  -- Bay 2 Stop Button Pressed
+
+begin
+  
+  WriteLn(2,"Bay 2 Stop Button Pressed");
+  if g_Estop then
+  
+    if g_SystemStatus = Batching and g_Bay2Status = Filling then
+      
+      g_Debounce:=1;
+      StartTimer(7);               
+      PauseFilling2;
+      Main_Screen;
+    
+    elsif g_SystemStatus = Batching and g_Bay2Status = Paused and g_Debounce = 0 then
+        
+        g_Bay2Status:=Short;
+        Short_Fill_Save;
+--      ResetScale2;
+--      SetLabelText(lbl10s1,"Canceling Fill and Resetting");
+--      StartTimer(6);
+--      Main_Screen;
+           
+    end if;
+    
+  end if;
+  
+  return;
+  
+end;
+
+handler Digins2B7Activate;  -- Bay 1 Stop Button Pressed
+
+begin
+  
+  WriteLn(2,"Bay 1 Stop Button Pressed");
+  
+  if g_Estop then
+  
+    if g_SystemStatus = Batching and g_Bay1Status = Filling then
+      
+      g_Debounce:=1;
+      StartTimer(7);    
+      PauseFilling1;
+      Main_Screen;
+    
+    elsif g_SystemStatus = Batching and g_Bay1Status = Paused and g_Debounce = 0 then
+        
+        g_Bay1Status:=Short;
+        Short_Fill_Save;
+--      ResetScale1;
+--      SetLabelText(lbl10s1,"Canceling Fill and Resetting");
+--      StartTimer(6);
+--      Main_Screen;
+         
+    end if;
+    
+  end if;
+  
+  return;
+  
+end;
+
+handler Userentry;
+--Declaration Section                   
+UserString : string;   
+UserInt    : integer;
+UserReal   : real;
+
+begin 
+    
+    UserString := GetEntry;
+    
+    ClosePrompt;  
+    EnableHandler(Numerickeypressed);
+    
+    if EventKey = EnterKey and Len(UserString) > 0  then
+
+      if g_EntryCategory = Ticket then
+      
+        g_iTicket:=StringToInteger(UserString);
+        Setup_Screen;
+        
+      elsif g_EntryCategory = Target then
+         
+        g_iTargetWt:=StringToReal(UserString);
+        Setup_Screen;
+        
+      elsif g_EntryCategory = PreAct then
+      
+        g_iPreActWt:=StringToReal(UserString);
+        Setup_Screen;
+        
+      elsif g_EntryCategory = Band then
+      
+        g_iBandWt:=StringToReal(UserString);
+        Setup_Screen;
+        
+      elsif g_EntryCategory = Pass then
+      
+        if UserString = "1080" then
+                    
+          g_SystemStatus := Setup;
+          Setup_Screen;
+          
+        end if;
+      
+      end if;
+        
+    end if;
+    
+    return;
+    
+end;
+
+handler User1Keypressed;
+--Declaration Section
+iDivert : integer;
+
+begin
+    
+    if g_Estop then
+    
+      if g_SystemStatus = Diag then
+        
+        if iDivert = 0 then 
+        
+          SetDigout(0,1,1);
+          SetLabelText(lbl14s2,"Left On");
+          iDivert:=1;
+          
+        else
+        
+          SetDigout(0,1,0);
+          SetLabelText(lbl14s2,"Left Off");
+          iDivert:=0;
+          
+        end if;
+        
+      elsif g_SystemStatus = Setup then
+        
+        g_EntryCategory:=Ticket;
+        DisplayStatus("Enter a new Ticket #:");
+        PromptUser(" => ");
+      
+      elsif g_Estop and g_SystemStatus = Ok and g_Bay1Status = Idle then
+      
+        if g_iSelectedScale = 1 then  -- If already on scale 2 then reselect it.
+      
+          SelectScale1;
+          
+        else          
+          
+          DivertToLeft;
+      
+        end if;
+              
+      end if;
+    
+    end if;
+      
+    return;
+
+end;
+
+handler User2Keypressed;
+--Declaration Section
+iDivert : integer;
+
+begin
+    
+    if g_Estop then
+    
+      if g_SystemStatus = Diag then
+        
+        if iDivert = 0 then 
+        
+          SetDigout(0,2,1);
+          SetLabelText(lbl14s2,"Right On");
+          iDivert:=1;
+          
+        else
+        
+          SetDigout(0,2,0);
+          SetLabelText(lbl14s2,"Right Off");
+          iDivert:=0;
+          
+        end if;
+        
+      elsif g_SystemStatus = Setup then
+        
+        g_EntryCategory:=Target;
+        DisplayStatus("Enter a new Target Wt:");
+        PromptUser(" => ");
+      
+      elsif g_Estop and g_Bay2Status = Idle and g_SystemStatus = Ok then
+      
+        if g_iSelectedScale = 2 then  -- If already on scale 2 then reselect it.
+      
+          SelectScale2;
+          
+        else          
+          
+          DivertToRight;
+        
+        end if;
+        
+      end if;
+    
+    else
+    
+      SetLabelText(lbl10s1,"Can't - EStop Pressed.");
+      StartTimer(6);
+    
+    end if;
+    
+    return;
+
+end;
+
+handler User3Keypressed;
+--Declaration Section
+iFeed : integer;
+begin
+    
+    --WriteLn(2,"3key Pressed");
+    if g_Estop then
+      
+      if g_SystemStatus = Diag then
+        
+        --WriteLn(2,"Diag Screen");
+        if iFeed = 0 then 
+        
+          SetDigout(0,3,1);
+          SetLabelText(lbl14s2,"Feed On");
+          iFeed:=1;
+          
+        else
+        
+          SetDigout(0,3,0);
+          SetLabelText(lbl14s2,"Feed Off");
+          iFeed:=0;
+          
+        end if;
+      
+      elsif g_SystemStatus = Ok and g_iCanStartScale and (g_Bay1Status = Selected or g_Bay2Status = Selected) then
+          
+          --WriteLn(2,"SystemOk Timer Good");
+          StopTimer(5);
+          g_ICanStartScale:=0;
+          if g_Bay1Status = Selected then
+            
+            WriteLn(2,"Bay 1 Started");
+            StartFilling1;
+            
+          elsif g_Bay2Status = Selected then
+            
+            WriteLn(2,"Bay 2 Started");
+            StartFilling2;
+            
+          end if;
+          
+      elsif g_SystemStatus = Batching and (g_Bay1Status = Paused or g_Bay2Status = Paused) then
+          
+          --WriteLn(2,"SystemBatching and 1 Bay paused.  Resuming Fill");
+          if g_Bay1Status = Paused then
+          
+            StartFilling1;
+            
+          elsif g_Bay2Status = Paused then
+          
+            StartFilling2;
+            
+          end if;
+          Main_Screen;
+      
+      elsif g_SystemStatus = Batching and (g_Bay1Status = Filling or g_Bay2Status = Filling) then
+          
+          --WriteLn(2,"System is batching - Pausing Fill.");
+          if g_Bay1Status = Filling then
+          
+            PauseFilling1;
+            
+          elsif g_Bay2Status = Filling then
+          
+            PauseFilling2;
+            
+          end if;
+          Main_Screen;
+      
+      elsif g_SystemStatus = Batching and (g_Bay1Status = Short or g_Bay2Status = Short) then
+          
+          SetDigout(0,3,1);
+           
+      elsif g_SystemStatus = Setup then
+        
+        --WriteLn(2,"System is in Setup");
+        g_EntryCategory:=PreAct;
+        DisplayStatus("Enter a new PreAct Wt:");
+        PromptUser(" => ");
+        
+      end if;
+    
+    else
+    
+      SetLabelText(lbl10s1,"Can't - EStop Pressed.");
+      StartTimer(6);
+    
+    end if;
+      
+    return;
+
+end;
+
+
+handler User3Keyreleased;
+--Declaration Section
+
+begin
+    
+    if g_Estop then
+    
+      if g_SystemStatus = Batching and (g_Bay1Status = Short or g_Bay2Status = Short) then
+          
+          SetDigout(0,3,0);
+          
+      end if;
+    
+    else
+    
+      SetLabelText(lbl10s1,"Can't - EStop Pressed.");
+      StartTimer(6);
+      
+    end if;
+    
+    return;
+
+end;
+
+
+handler User4Keypressed;
+--Declaration Section
+
+begin
+    
+    if g_Estop then
+    
+      if g_SystemStatus = Ok and (g_Bay1Status = Idle and g_Bay2Status = Idle) then
+        
+        g_EntryCategory:=Pass;
+        PromptUser("Pass =>");
+      
+      elsif g_SystemStatus = Batching and (g_Bay1Status = Paused or g_Bay2Status = Paused) then
+          
+          if g_Bay1Status = Paused then
+            
+            g_Bay1Status:=Short;
+            Short_Fill_Save;
+            --ResetScale1;
+            --SetLabelText(lbl10s1,"Canceling Fill and Resetting");
+            --StartTimer(6);
+            
+          elsif g_Bay2Status = Paused then
+              
+              g_Bay1Status:=Short;
+              Short_Fill_Save;
+--            ResetScale2;
+--            SetLabelText(lbl10s1,"Canceling Fill and Resetting");
+--            StartTimer(6);
+            
+          end if;
+          --Main_Screen;
+          
+      elsif g_SystemStatus = Setup then
+        
+        g_EntryCategory:=Band;
+        DisplayStatus("Enter Acceptance Range:");
+        PromptUser(" => ");
+      
+      elsif g_SystemStatus = Diag then
+        
+        g_SystemStatus:=Reports;
+        
+        Reports_Screen;
+        
+      end if;  
+    
+    else
+    
+      SetLabelText(lbl10s1,"Cannot RESET - EStop Engaged.");
+      StartTimer(6);
+      
+    end if;
+    
+    return;
+
+end;
+
+handler User5Keypressed;
+--Declaration Section
+
+begin
+    
+    if g_Estop then
+    
+      if g_SystemStatus = Ok then
+      
+        g_SystemStatus:=Diag;
+        Diagnostics_Screen;
+      
+      elsif g_SystemStatus = Setup or g_SystemStatus = Diag or g_SystemStatus = Reports then
+        
+        if g_SystemStatus = Setup then
+        
+          Save_Config;
+          
+        end if;
+        
+        ResetScale1;
+        ResetScale2;
+        Main_Screen; 
+      
+      elsif g_SystemStatus = Batching and (g_Bay1Status = Short or g_Bay2Status = Short) then
+          
+          SetLabelText(lbl10s1,"Finalizing Fill by Keypress.");  
+          
+          Short_Fill_Save;
+                    
+      end if;
+    
+    end if;
+        
+    return;
+
+end;
+
+
+ 
+ 
+       
+  -- End of event handlers.
+  ----------------------------------------------------------------------------
+
+   
+
+
+------------------------------------------------------------------------------
+-- This chunk of code is the system startup event handler.
+
+begin
+   
+  -- Initialize all global variables here. 
+
+  SetTimerMode(1,TimerContinuous);
+  SetTimer(1,10);
+  --StartTimer(1);
+  SetTimerMode(2,TimerOneShot);-- Close Divert Timer
+  SetTimer(2,100);-- Set Delay to 1 second
+  
+  SetTimerMode(3,TimerOneShot);  -- Scale 1 Motion Timer
+  SetTimer(3,100);-- Set Delay to 1 second
+  
+  SetTimerMode(4,TimerOneShot);  -- Scale 2 Motion Timer
+  SetTimer(4,100);-- Set Delay to 1 second
+  
+  SetTimerMode(5,TimerOneShot);
+  SetTimer(5,6000); -- After selecting a scale, the user has 1 minute to press start or it resets
+  
+  SetTimerMode(6,TimerOneShot);
+  SetTimer(6,300);  -- this is used to remove updates to the operator from the screen.
+  
+  SetTimerMode(7,TimerOneShot);
+  SetTimer(7,100);  -- This is used as a debounce timer in conjunction with the g_Debounce variable.
+  
+  g_SystemStatus:=Startup; 
+  g_Bay1Status := Idle;
+  g_Bay2Status := Idle; 
+  g_Debounce:=0;
+  SetLabelText(1,"Selected");
+  SetLabelText(2,"Selected");
+  SetLabelText(lbl6s1,"lbs");
+  SetLabelText(lbl7s1,"lbs");
+  
+    
+  -- Increment the build number every time you make a change and recompile.
+     
+     
+  -- Display the version number to the display.
+  Check_EStop;
+  DisplayVersion;
+  Load_Config; 
+  Main_Screen;
+  
+end DualFillingStation; 
+-- This name must match the name following "program" keyword at 
+-- the beginning of the program.
+

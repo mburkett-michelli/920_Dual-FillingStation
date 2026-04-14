@@ -1,0 +1,180 @@
+-------------------------------------------------
+-- Used with iRev Configuration File
+-- F:\OneDrive_TS\OneDrive - TOTAL SCALE SERVICE\Customers\HandyTrucklines\DualFillingStation\920DualFillingStation.920
+-------------------------------------------------
+
+
+-- Scale Aliases
+Scale1   : constant integer := 1;
+Scale2   : constant integer := 2;
+
+-- Setpoint Aliases
+
+-- Widget Aliases
+Lbl1S1   : constant integer := 1;
+Lbl2S1   : constant integer := 2;
+Sym1S1   : constant integer := 3;
+Sym2S1   : constant integer := 4;
+Lbl3S1   : constant integer := 5;
+Lbl4S1   : constant integer := 6;
+Lbl5S1   : constant integer := 7;
+Sym3S1   : constant integer := 8;
+Sym4S1   : constant integer := 9;
+Sym5S1   : constant integer := 10;
+Sym6S1   : constant integer := 11;
+Lbl6S1   : constant integer := 12;
+Lbl7S1   : constant integer := 13;
+Lbl10S1  : constant integer := 14;
+Sym7S1   : constant integer := 15;
+Sym8S1   : constant integer := 16;
+Sym3S2   : constant integer := 17;
+Sym4S2   : constant integer := 18;
+Sym7S2   : constant integer := 19;
+Sym8S2   : constant integer := 20;
+Sym10S2  : constant integer := 21;
+Sym11S2  : constant integer := 22;
+Num1S1   : constant integer := 23;
+Num2S1   : constant integer := 24;
+Sym12S2  : constant integer := 25;
+Sym13S2  : constant integer := 26;
+Sym14S2  : constant integer := 27;
+Sym15S2  : constant integer := 28;
+Lbl1S3   : constant integer := 29;
+Lbl2S3   : constant integer := 30;
+Lbl3S3   : constant integer := 31;
+Lbl4S3   : constant integer := 32;
+Lbl5S3   : constant integer := 33;
+Lbl6S3   : constant integer := 34;
+Lbl7S3   : constant integer := 35;
+Lbl8S3   : constant integer := 36;
+Lbl9S3   : constant integer := 37;
+Lbl1S2   : constant integer := 38;
+Lbl2S2   : constant integer := 39;
+Lbl3S2   : constant integer := 40;
+Lbl4S2   : constant integer := 41;
+Lbl5S2   : constant integer := 42;
+Lbl6S2   : constant integer := 43;
+Lbl7S2   : constant integer := 44;
+Lbl9S2   : constant integer := 45;
+Lbl10S2  : constant integer := 46;
+Lbl12S2  : constant integer := 47;
+Lbl13S2  : constant integer := 48;
+Lbl14S2  : constant integer := 49;
+Lbl10S3  : constant integer := 50;
+Lbl11S3  : constant integer := 51;
+Lbl1S5   : constant integer := 52;
+Lbl2S5   : constant integer := 53;
+Lbl3S5   : constant integer := 54;
+Lbl4S5   : constant integer := 55;
+Lbl5S5   : constant integer := 56;
+Lbl6S5   : constant integer := 57;
+Lbl7S5   : constant integer := 58;
+
+-- Serial Port Aliases
+Port1    : constant integer := 1;
+Port2    : constant integer := 2;
+Port3    : constant integer := 3;
+Port4    : constant integer := 4;
+
+-- Analog Output Card Aliases
+
+-- Digital I/O Aliases
+DIOCRD0  : constant integer := 0;
+DivertL  : constant integer := 1;
+DivertR  : constant integer := 2;
+Feed     : constant integer := 3;
+Estop    : constant integer := 4;
+SenseR   : constant integer := 5;
+SenseL   : constant integer := 6;
+DIO0_7   : constant integer := 7;
+DIO0_8   : constant integer := 8;
+DIO0_9   : constant integer := 9;
+DIO0_10  : constant integer := 10;
+DIO0_11  : constant integer := 11;
+DIO0_12  : constant integer := 12;
+DIO0_13  : constant integer := 13;
+DIO0_14  : constant integer := 14;
+DIO0_15  : constant integer := 15;
+DIO0_16  : constant integer := 16;
+DIO0_17  : constant integer := 17;
+DIO0_18  : constant integer := 18;
+DIO0_19  : constant integer := 19;
+DIO0_20  : constant integer := 20;
+DIO0_21  : constant integer := 21;
+DIO0_22  : constant integer := 22;
+DIO0_23  : constant integer := 23;
+DIO0_24  : constant integer := 24;
+
+DIOCRD2  : constant integer := 2;
+DIO2_01  : constant integer := 1;
+Select1  : constant integer := 2;
+Start1   : constant integer := 3;
+Stop1    : constant integer := 4;
+Select2  : constant integer := 5;
+Start2   : constant integer := 6;
+Stop2    : constant integer := 7;
+DIO2_08  : constant integer := 8;
+DIO2_09  : constant integer := 9;
+DIO2_10  : constant integer := 10;
+DIO2_11  : constant integer := 11;
+DIO2_12  : constant integer := 12;
+DIO2_13  : constant integer := 13;
+DIO2_14  : constant integer := 14;
+DIO2_15  : constant integer := 15;
+DIO2_16  : constant integer := 16;
+DIO2_17  : constant integer := 17;
+DIO2_18  : constant integer := 18;
+DIO2_19  : constant integer := 19;
+DIO2_20  : constant integer := 20;
+DIO2_21  : constant integer := 21;
+DIO2_22  : constant integer := 22;
+DIO2_23  : constant integer := 23;
+DIO2_24  : constant integer := 24;
+
+-- Database Type Definitions and Field Aliases
+type TruckDatabase is Database ("Truck")
+	ID       : string;
+	Pri_Wgt  : real;
+	Sec_Wgt  : real;
+	Ter_Wgt  : real;
+	TimeDate : datetime;
+	Scale    : integer;
+	Keyed    : integer;
+end database;
+
+Truck_ID          : constant integer := 1;
+Truck_Pri_Wgt     : constant integer := 2;
+Truck_Sec_Wgt     : constant integer := 3;
+Truck_Ter_Wgt     : constant integer := 4;
+Truck_TimeDate    : constant integer := 5;
+Truck_Scale       : constant integer := 6;
+Truck_Keyed       : constant integer := 7;
+
+type TotesDatabase is Database ("Totes")
+	Ticket   : integer;
+	ToteWt   : real;
+	Station  : integer;
+	TimeFill : datetime;
+end database;
+
+Totes_Ticket      : constant integer := 1;
+Totes_ToteWt      : constant integer := 2;
+Totes_Station     : constant integer := 3;
+Totes_TimeFill    : constant integer := 4;
+
+type SetupDatabase is Database ("Setup")
+	Ticket   : integer;
+	Target   : real;
+	PreAct   : real;
+	Band     : integer;
+	SaveRec  : integer;
+end database;
+
+Setup_Ticket      : constant integer := 1;
+Setup_Target      : constant integer := 2;
+Setup_PreAct      : constant integer := 3;
+Setup_Band        : constant integer := 4;
+Setup_SaveRec     : constant integer := 5;
+
+
+

@@ -1,0 +1,148 @@
+-------------------------------------------------
+-- Used with iRev Configuration File
+-- D:\OneDrive - TOTAL SCALE SERVICE\SourceCode\920\DualFillingStation\Dual_Automatic\920DualFillingStation.920
+-------------------------------------------------
+
+
+-- Scale Aliases
+Scale1   : constant integer := 1;
+Scale2   : constant integer := 2;
+
+-- Setpoint Aliases
+
+-- Widget Aliases
+Lbl1S1   : constant integer := 1;
+Lbl2S1   : constant integer := 2;
+Sym1S1   : constant integer := 3;
+Sym2S1   : constant integer := 4;
+Lbl3S1   : constant integer := 5;
+Lbl4S1   : constant integer := 6;
+Lbl5S1   : constant integer := 7;
+Sym3S1   : constant integer := 8;
+Sym4S1   : constant integer := 9;
+Sym5S1   : constant integer := 10;
+Sym6S1   : constant integer := 11;
+Lbl6S1   : constant integer := 12;
+Lbl7S1   : constant integer := 13;
+Lbl10S1  : constant integer := 14;
+Sym7S1   : constant integer := 15;
+Sym8S1   : constant integer := 16;
+Sym3S2   : constant integer := 17;
+Sym4S2   : constant integer := 18;
+Num1S1   : constant integer := 19;
+Num2S1   : constant integer := 20;
+Sym14S2  : constant integer := 21;
+Sym15S2  : constant integer := 22;
+Lbl1S3   : constant integer := 23;
+Lbl2S3   : constant integer := 24;
+Lbl3S3   : constant integer := 25;
+Lbl4S3   : constant integer := 26;
+Lbl5S3   : constant integer := 27;
+Lbl6S3   : constant integer := 28;
+Lbl7S3   : constant integer := 29;
+Lbl8S3   : constant integer := 30;
+Lbl9S3   : constant integer := 31;
+Lbl1S2   : constant integer := 32;
+Lbl2S2   : constant integer := 33;
+Lbl3S2   : constant integer := 34;
+Lbl4S2   : constant integer := 35;
+Lbl5S2   : constant integer := 36;
+Lbl6S2   : constant integer := 37;
+Lbl7S2   : constant integer := 38;
+Lbl9S2   : constant integer := 39;
+Lbl10S2  : constant integer := 40;
+Lbl12S2  : constant integer := 41;
+Lbl13S2  : constant integer := 42;
+Lbl14S2  : constant integer := 43;
+Lbl10S3  : constant integer := 44;
+Lbl11S3  : constant integer := 45;
+Lbl1S5   : constant integer := 46;
+Lbl2S5   : constant integer := 47;
+Lbl3S5   : constant integer := 48;
+Lbl4S5   : constant integer := 49;
+Lbl5S5   : constant integer := 50;
+Lbl6S5   : constant integer := 51;
+Lbl7S5   : constant integer := 52;
+
+-- Serial Port Aliases
+Port1    : constant integer := 1;
+Port2    : constant integer := 2;
+Port3    : constant integer := 3;
+Port4    : constant integer := 4;
+
+-- Analog Output Card Aliases
+
+-- Digital I/O Aliases
+DIOCRD0  : constant integer := 0;
+DivertL  : constant integer := 1;
+DivertR  : constant integer := 2;
+Feed     : constant integer := 3;
+Estop    : constant integer := 4;
+SenseR   : constant integer := 5;
+SenseL   : constant integer := 6;
+DIO0_7   : constant integer := 7;
+DIO0_8   : constant integer := 8;
+DIO0_9   : constant integer := 9;
+DIO0_10  : constant integer := 10;
+DIO0_11  : constant integer := 11;
+DIO0_12  : constant integer := 12;
+DIO0_13  : constant integer := 13;
+DIO0_14  : constant integer := 14;
+DIO0_15  : constant integer := 15;
+DIO0_16  : constant integer := 16;
+DIO0_17  : constant integer := 17;
+DIO0_18  : constant integer := 18;
+DIO0_19  : constant integer := 19;
+DIO0_20  : constant integer := 20;
+DIO0_21  : constant integer := 21;
+DIO0_22  : constant integer := 22;
+DIO0_23  : constant integer := 23;
+DIO0_24  : constant integer := 24;
+
+-- Database Type Definitions and Field Aliases
+type TruckDatabase is Database ("Truck")
+	ID       : string;
+	Pri_Wgt  : real;
+	Sec_Wgt  : real;
+	Ter_Wgt  : real;
+	TimeDate : datetime;
+	Scale    : integer;
+	Keyed    : integer;
+end database;
+
+Truck_ID          : constant integer := 1;
+Truck_Pri_Wgt     : constant integer := 2;
+Truck_Sec_Wgt     : constant integer := 3;
+Truck_Ter_Wgt     : constant integer := 4;
+Truck_TimeDate    : constant integer := 5;
+Truck_Scale       : constant integer := 6;
+Truck_Keyed       : constant integer := 7;
+
+type TotesDatabase is Database ("Totes")
+	Ticket   : integer;
+	ToteWt   : real;
+	Station  : integer;
+	TimeFill : datetime;
+end database;
+
+Totes_Ticket      : constant integer := 1;
+Totes_ToteWt      : constant integer := 2;
+Totes_Station     : constant integer := 3;
+Totes_TimeFill    : constant integer := 4;
+
+type SetupDatabase is Database ("Setup")
+	Ticket   : integer;
+	Target   : real;
+	PreAct   : real;
+	Band     : integer;
+	SaveRec  : integer;
+end database;
+
+Setup_Ticket      : constant integer := 1;
+Setup_Target      : constant integer := 2;
+Setup_PreAct      : constant integer := 3;
+Setup_Band        : constant integer := 4;
+Setup_SaveRec     : constant integer := 5;
+
+
+

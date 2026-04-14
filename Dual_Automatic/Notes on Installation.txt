@@ -1,0 +1,21 @@
+Motors are using 3 phase 240volt.
+
+The control wiring and motor control was more complicated than I felt comfortable messing with, plus an electrician is required for these motor wiring.
+
+I talked with their electrician.
+
+I left a wiring diagram in the box where he should land his wiring to my relays.
+
+Relays 1-2-3 => Common connections - Here you land the source 3 phase for the motors
+
+Relays 4-5-6 => NC connections - Motor Forward wiring
+                NO connections - Motor Reverse wiring
+
+The scale operates 2 relays (unlabled).
+
+Relay 7 - When activated sends 120VAC to relays 1-2-3 coils.  When activated relays 1-2-3 will provide 3 phase power to relays 4-5-6.
+
+Relay 8 - When not activated Motor is in forward
+          When activated Motor is in reverse
+
+The electricians will swap the NO connections for 2 of the relays to reverse the motor.

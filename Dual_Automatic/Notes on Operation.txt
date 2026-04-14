@@ -1,0 +1,45 @@
+
+There is a setup screen that allows the user to select options for filling, the F4 Button
+The password is 411.  This can be changed through programming.
+
+Setup Options:
+--------------
+Target Weight - What is the target weight you are trying to hit.
+PreAct        - How soon before target do you want filling shut off.
+Band          - Currently checks against this weight but doesn't try to fill the bag if its short.
+
+Wiring:
+-------
+DIO1 - Belt On / Off for Scale 1
+DIO2 - Belt On / Off for Scale 2
+DIO3 - Feed Motor (If its hooked up)
+DIO4 - E-Stop input
+
+
+
+Operation:
+----------
+
+User presses Left or Right on the Scale to begin filling.
+ - The scale looks at the current weight on the tote and records it.  It will adjust your
+   filling operation to account for this weight.
+
+User can press 'Pause' to pause filling.
+
+If the user presses 'Start' again the scale will begin filling again.
+
+To Cancel Filling you need to press the 'Cancel' on the 920
+
+System will fill until the weight on the scale is equal to or greater than
+ - Your target weight - the PreAct weight.
+
+The 920 will look for the scale to steady on a weight and see if the weight is within the limits.
+
+ - If the FallOff is within limits the system will automatically save the load and reset.
+
+ - If it is short the display will read "Short" and Bump and Finish buttons will be present on the 920
+ - Bump will dispense product while it is depressed.
+ - If the scale steadies out within acceptable limits the scale will automatically save the weight and reset.
+ - If the user presses "Finish" on the 920 it will save the current tote and reset.
+ - If the user presses a Select button while the scale is short, the scale will save the current tote and reset.
+
